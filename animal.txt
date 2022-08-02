@@ -1,0 +1,4 @@
+edit {host[0]} 
+set subnet {host[2]} 255.255.255.255 
+set comment '' 
+next

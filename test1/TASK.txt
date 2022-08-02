@@ -1,0 +1,50 @@
+check soar alert assignment.
+check exchange integration for passwordless
+
+
+Fill the agent report configuration as task
+
+Fixed issue with polaris cimtrak repo installation on 2019 server
+
+PANORAMA LOTUS BANK INTEGRATION
+SOAR FIXES
+SOPHOS COMPLETION
+USER ID ISSUE ON PALO RESOLUTION
+TAJ BANK follow up
+FBN PDQ INVENTORY ADDON
+**Change TAJ support portal
+**TAJBANK Portal rename
+**review insightIDR Project plan and also do a walkthrough
+Palo Alto HCI
+
+
+panorama setup
+username from the GUI is admin and password will be reset at the prompt too.
+then set the network parameters with;
+set deviceconfig system ip-address ip-here netmask mask-here default-gateway gateway-here domain dns-here
+then hit commit and enter
+and try to reach via gui
+LICENSE too
+first bank session soar
+
+reactivated the global protect client version 5.2.4. they are low on version.
+panorama review and login
+techsupport report
+
+mail justin for FIM integration with service now. demo
+
+xcopy paths  /o /x /y
+
+create a certificate
+create ssl/tls profile and map the certificate created above to it
+create a zone and enable user identification
+configure tunnel interface and place the zone above to it
+configure authentication profile to be used (radius and ldap)
+create global protect profile ip and interface placed, then client authentication, choose authentication profile of ldap for portal, okay. | Agent section, external gateway should be the ip of outside, trusted cert, choose the configured cert then okay. | Gateway, general, same thing, interface and ip check. authentication, choose the ssl/tls configured. add client below, os any, authentication profile should be radius. okay.
+Agent configuration, enable tunnel and pick the tunnel created. client setting, pick users if needed,s et pool if neccesary, split tunnel, add if needed and Okay.
+then ceate policy from vpn zone created to Lan. and done
+
+putty session on desktop putty.log
+support tech-support file
+2 users of working and not working id inclusive
+export the monitor logs.
