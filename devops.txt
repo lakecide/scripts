@@ -1,0 +1,658 @@
+DEVOPS ROUTE
+
+Applications you need
+install chocolatey via chocolatey.org/install  (you can use choco to install any packages, just search for it on the platform to know the command to use)
+
+github profile to follow is github.com/devopshydclub/vprofile-project   (It shows all the needed packages to install)
+
+Tools to install are:
+Virtual box
+Gitbash
+vagrant
+chocolatey
+jdk8
+maven
+intellij for IDE or Vscode 
+sublime text editor
+
+Tools Prerequisites for Ubuntu 20
+                                 Tools Prerequisites for Ubuntu 20
+Install Virtualbox
+$ sudo apt update
+$ sudo apt install virtualbox
+Install Vagrant
+$ curl -O https://releases.hashicorp.com/vagrant/2.2.9/vagrant_2.2.9_x86_64.deb
+
+$ sudo apt install ./vagrant_2.2.9_x86_64.deb
+Install Git
+$ apt install git
+Install jdk8
+
+$ sudo apt-get install openjdk-8-jdk
+Install Maven
+
+$ sudo apt-get install maven
+
+Install awscli
+
+$ sudo apt-get install awscli
+
+Install Intellij community
+
+$ sudo snap install intellij-idea-community --classic
+
+Install Sublime Text
+$ sudo apt update
+$ sudo apt install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
+
+$ curl -fsSL https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
+
+$ sudo add-apt-repository "deb https://download.sublimetext.com/ apt/stable/"
+
+$ sudo apt install sublime-text
+
+
+
+*******************************DO SOMETHING ABOUT PRIVATE IP ASKING FOR PERMISSION AND PUBLIC ASKING FOR OPTION *************************
+*******************************************************************8888
+
+VM PROVISIONING
+
+vagrantup.com/docs for more documentations
+
+Vagrant can manage vms automatically
+
+create a directory for your vms
+vagrant init name-of-box (ps. name of box can be retrieved from the vagrant cloud)
+vagrant up will being up the vm and must be ran from inside the cvm folder
+vagrant ssh is to ssh into the vm itself and login with the default user
+vagrant halt is to stop the vms
+vagrant destroy is to destroy the vm
+vagrant reload is to reboot
+
+vagrant status
+vagrant reload
+vagrant reload --provision"
+vagrant plugin install vagrant-hostmanager
+
+git checkout local-setup (this is to change the branch of a repository)
+** vagrant error fix  config.vm.box_download_insecure=true
+you can modify the vagrant file to reflect some changes on the VM like use private network or increase ram, etc
+
+***you can redirect to /dev/null and the output will not be anywhere example is yum install vim -y > /dev/null
+
+SYNC DIRECTORY
+The vagrant vm directory is also mounted inside the VM, you can use it to backup files as it will always remain in your system no matter what happens to the VM
+You can also configure sync directory from the vagrant file itself where you have config.vm.synced_folder and map the folder on your PC to the vm directory, any file place in those directory will be automatically mapped. P.S, The firest directory for windows should be "//"
+
+*****every vagrant VM has a directory call the /vagrant which is mapped to the host machine where you have the vagrant vm setup, it a synced. you can reference that part the /vagrant command
+
+
+you can do provisioning when creating a vm to install some certain apps along the way, this works by editing the shell section in the vagrant file for a non existent vm and then start the vm afterwards
+** For a VM that is already running and you need to make a provisioning change, you modify the vagrant file and the do " vagrant reload --provision"
+
+debugging tool on a website press f12 to access the network section of a site and you can see all link being called when you click them
+
+tools to host a website on linux
+set up the vm linux (centos or ubuntu)
+Install the following service
+httpd and access the /var/www/html directory
+wget to download templates from the internet
+access the templates sites and use f12 to access the network tab, get the actual link of the download
+got the linux server and use wget to downlaod the file and extract to the /var/www/html/ directory
+https://www.tooplate.com/
+
+WORDPRESS SETUP ON Ubuntu
+Setup the VM box
+access the wordpress on ubutu documentation page and follow the guide to setup
+
+for automation of website and wordpress creation
+initialize a box and review the configuration
+the the provision section in the configuration is where all the steps will go see below.
+
+config.vm.provision "shell", inline: <<-SHELL
+     yum install httpd wget unzip -y
+	 systemctl start httpd
+	 systemctl enable httpd
+	 cd /tmp/
+	 wget https://www.tooplate.com/zip-templates/2119_gymso_fitness.zip
+	 unzip -o 2119_gymso_fitness.zip
+	 cp -r 2119_gymso_fitness/* /var/www/html/
+	 systemctl restart httpd
+   SHELL
+
+***PS you can execute SQL commands directly from the shell by doing mysql -u means login, root -e "commands go here"  this means mysql -u root is the user and -e is to execute a command
+
+*** Multi VM SETUP
+This can be created with a vagrant file like the example below
+
+Vagrant.configure("2") do |config|
+ # config.vm.provision "shell", inline: "echo Hello"  (this is a global settings and anything that goes here will be applied to both VMS like update etc)
+  config.vm.network "public_network"  (this line will be applied to both vms)
+  config.vm.define "web" do |web|
+    config.vm.box = "ubuntu/bionic64"
+	config.vm.network "private_network", ip: "192.168.33.16"
+	config..vm.box_download_insecure = true
+  end
+ 
+  config.vm.define "db" do |db|
+    db.vm.box = "mysql"
+  end
+end
+
+With this you will have 2 VM with one named web and the other name db from the example above
+to access the vms, you can do that individually like vagrant ssh db etc
+you can also add provisioning to each of the boxes
+
+
+
+******PROJECT SETUP OF MULTIPLE Applications   ****MANUAL PROVISIONING******
+Design requirements for the services are below and we are going to set up on these services on different vm boxes
+NGINX - (Front end, deployed as the loasbalancer and forwards requests to apache tomcat which is the app server accepts requests from user as links or endpoint)
+TOMCAT  - (Application server which accepts requests from nginx and forwards it to rabbitmp messaging)
+RABBITMQ - (This is the message broker service that connects the app server to the backend)
+MEMCACHED  - Caching service placed in front of the database to cache query requests sent to the db for quick access.  in-memory key-value store for small chunks of arbitrary data (strings, objects) from results of database calls
+MYSQL  - The database
+
+this will go from user accessing via ip address or endpoint and they will be redirected to a loadbalancer which we will setup with NGINX  and will be forward to apache tomcat which is app server and then to rabbitmq which  is the message broker then to memcached which will cache the message queries intended for msql before the final request goes to msql
+
+We will also look at another architecture of automated setup
+vagrant
+virtualbox
+gitbash
+
+
+
+
+MYSQL SAMPLE QUERIES
+
+mysql_secure_installation
+Set DB name and users.
+# mysql -u root -padmin123
+mysql> create database accounts;
+mysql> grant all privileges on accounts.* TO 'admin'@’%’ identified by 'admin123' ;
+mysql> FLUSH PRIVILEGES;
+mysql> exit;
+Download Source code & Initialize Database.
+# git clone -b local-setup https://github.com/devopshydclub/vprofile-project.git
+# cd vprofile-project
+# mysql -u root -padmin123 accounts < src/main/resources/db_backup.sql
+# mysql -u root -padmin123 accounts
+mysql> show tables;
+
+**
+
+******PROJECT SETUP OF MULTIPLE Applications   ****MANUAL PROVISIONING******
+
+Same process and architechture as the manual provisioning
+
+Design requirements for the services are below and we are going to set up on these services on different vm boxes
+NGINX - (Front end, deployed as the loasbalancer and forwards requests to apache tomcat which is the app server accepts requests from user as links or endpoint)
+TOMCAT  - (Application server which accepts requests from nginx and forwards it to rabbitmp messaging)  
+RABBITMQ - (This is the message broker service that connects the app server to the backend)
+MEMCACHED  - Caching service placed in front of the database to cache query requests sent to the db for quick access. in-memory key-value store for small chunks of arbitrary data (strings, objects) from results of database calls
+MYSQL  - The database
+ 
+
+All the configuration has been made on shell scripts and placed in the vagrant folder as well as made reference to on the vagrant shell provisioning section.
+
+the automated action will involve - Vagrant file -> virtual box -> Gitbash = services and box provisioning
+
+**COMMAND LINE ARGUMENT
+For command line argument, you start with $1 - $9 name in your script and reference it when you want to run your script from the shell. the declaration can only be from 1 to 9
+$0 is the name of the script
+$RANDOM gives a random number
+$HOSTNAME is the hostname of the system
+$? echos the status of the last command ran
+$USER is the current logged on user
+
+QUOTES IN BASH
+Single and double quote. double quote respects the meaning of a variable in between it eg " this is me $now" is different from 'this is me $now'
+to ignore a special character in a double quote, use the backward slash before the character and bash will ignore it. eg "I have \$5 only"
+
+***Command substitutions
+to parse a command output to a variable, you enclose the command in `` or $()
+example current_user=`who` or current_user=$(who), they are both the same thing
+then you can echo $current_user
+***OR another example is 
+mems=$(free -m | grep Mem | awk '{print $4}')
+echo "The system free space is $mems mb"
+
+
+*****  /etc/ssh/sshd_config directory is where ssh access config file is kep, you can modify this to allow password auth or disable it
+export editor=VIM or NANO
+* setup the servers needed
+* add the host to ip address mappings on the main server
+* change the hostname on all servers
+* add the management user on all the servers to be managed
+* add the user to the sudoers file and use nopasswd to it
+*****  /etc/ssh/sshd_config directory is where ssh access config file is kep, you can modify this to allow password auth or disable it
+* test the connection with ssh user@host uptime or any command
+* add the ssh keys to all the servers so you dont have to use password and just use public and private key
+* generate ssh keys for login with the command ***ssh-keygen** you can proceed with enter all through or set a passphrase
+* then run ssh-copy-id username@hostname to apply the ssh key to the user and the hostname 
+* you can try to deploy a command check now on the servers using for loop or something
+* modify your script and add and if statement to detect if its a centos or ubuntu. you can use yum --help and check the output with $?
+* using scp, puah the script and execute on all remote machines
+
+
+
+AWS
+
+TO LAUNCH An instance ****aws ec2 run-instances --image-id ami-0cff7528ff583bf9a --count 1 --instance-type t2.micro --key-name my-aws-key3 --security-groups my-sec-1
+
+*AWS (EC2 and ELB setup for multi instance arch) steps below 
+create instance
+create AMI to launch instance from
+Launch templates which will be used to create instances on the fly
+Target group for ec2 in preparation for load balancer
+Loadbalancer
+
+
+to create a working application with Loadbalancer and target groups
+Dub a working instance and get the AMI
+create a launch template using the AMI
+Create a target group and then create a loadbalancer from it
+THEN create a Auto scaling group
+**to modify the app, you need to create another version of lauchn template, like modify your app and get the ami then use it
+then go back to the ASG AND start instant refresh so the changes can take effect by terminating your instance and launching new ones from the template
+
+
+***THE AWS DEPLOYMENT OF APPLICATION (FLOW OF EXECUTION) this approach is called *****LIFT and SHIFT*****
+* Create key pairs
+* create security groups for frontend and back-end
+* launch instances with user data (bash scripts) (the front end tomcat server will accept traffic on port 8080 and forward to the backend server)(take note of all security group too)
+* update IP to name mapping in route 53 (this is for backend services and they have been created in a private dns zone and this for internal communication)
+* Build application from source code (this is for tomcat and the source code will be built with maven and sent to s3 bucket then a role will be added to the ec2 instance to have access to s3 bucket)
+* Upload to S3 bucket (grant the front end server access to s3 via iam role)
+* Download artifact to tomcat ec2 instance
+* setup ELB with https (certs from amazon cetificate manager)
+* Map ELB endpoint to website name in hosting provider DNS (users will connect via https and it will be routed to the load balancer)
+* Verify
+* Build auto scaling group for tomcat instances
+
+*** to check the user data on AWS instance
+curl http://169.254.169.254/latest/user-data
+
+
+
+*****The other method is called refactoring (rearchitecting for scalability)
+We will use more of beanstalk for frontend which will manage launching ec2 for us
+beanstalk will also cater for loadbalancer and autoscaling
+beanstalk will do automation and also handle storage (EFS/S3)
+
+**BACKEND**
+DB will be from RDS
+Elastic cache will do memcached
+activeMQ will come in pkace of rabbitmq
+ROUTE53 for DNS
+CLOUDFRONT for content delivery (CDN)
+
+ARCHITECTURE FOR THE PROJECT
+- EC2 Instances
+- ELB
+- AUTOSCALLING
+- EFS/S3
+- RDS
+- ELASTIC CACHE
+- ACTIVE MQ
+- ROUTE 53
+- CLOUDFRONT
+
+** Request goes from user and routed from route53 endpoint to amazon cloudfront which will also cache contents for quick delivery, which is then forwarded to elb managed by beanstalk and forwarded to ec2 instance also managed by beanstalk. artifact are stored on S3. tHE event is then forwarded to activeMQ which is then connected to elasticache before the final destination to the RDS.
+
+********FLOW OF EXECUTION******
+- From the AWS accounts-
+- create key pairs
+- create security groups for elasticcache, RDS and ActiveMQ
+- Create (RDS, amazon elastic cache, amazon active mq)
+- create ec2 instance for the database, login to the instance and install mysql client which will be used to connect to the rds db
+- connect to rds mysql insatance with mysql -h vprofile-rds-mysql.czp8gefi9b1e.us-east-1.rds.amazonaws.com -u username -p'password'
+-clone the source code on the instance so as to populate the db with an already provisioned database tables
+***git branch -a to show all associated branch of a repository
+mysql -h vprofile-rds-mysql.czp8gefi9b1e.us-east-1.rds.amazonaws.com -u username -p'password' name-of-db < directory-of-backup
+
+- create elastic beanstalk environment
+- update SG of backend to allow traffic from  bean SG
+- UPDATE SG of backend to allow internal traffic
+- launch ec2 instance for DB initialize
+- login to the instnace and initialize RDS DB
+- Change healthcheck on beanstalk to /login
+- add 443 https listener to ELB
+- Build artifact with backend information
+- deploy artifact to beanstalk
+- Create CDN (cloudfront) with ssl cert
+- update entry in hosting provider dns zones
+-----test the url----
+
+
+rds endpoint
+vprofile-rds-mysql.czp8gefi9b1e.us-east-1.rds.amazonaws.com
+port 3306
+
+connect to rds mysql insatance with mysql -h vprofile-rds-mysql.czp8gefi9b1e.us-east-1.rds.amazonaws.com -u username -p'password'
+rds login
+user admin
+pass crxRiqf5Kri2V26c9Bvk
+
+rabbitmq
+pass Welcome123admin$
+user rabbit
+
+elasticache endpoint vprofile-elasticache-service.1vuyho.cfg.use1.cache.amazonaws.com:11211
+
+rabbitmq endpoint  amqps://b-a0de93e8-dbf8-484d-a1fb-fa24f23a07c9.mq.us-east-1.amazonaws.com:5671
+
+
+
+*********GIT*************
+VCS (Version control system). there is centralize and distributed version control systemctl
+Distributed or central repository
+Git is a distributed version control system
+
+git init (to initialize a repository locally)
+* then you can connect the repo to the remote with,
+git branch -M name-of-the-branch
+git remote add origin git-hub-repo-address
+git push -u origin main
+
+
+******TO MAKE A CHANGE****
+** make a change
+** index the change (with - git add file-change-name or git add .)
+** commit the change locally ( git commit -m "comment")
+** pust the change to the remote repository (git push origin main or master)
+
+*** "git log" will show you all the previous commits in the current branch
+*** git log --oneline (will shorten the commit id )
+** git show commit-id-here retrieved from git log --oneline
+
+Creating a new branch 
+***  git branch -c name-of-new-branch
+** git branch -a ( to check all your branch)
+** git checkout name-of-branch (this is to switch branch) or git switch name-of-branch
+
+** git rm name-of-file (to remove a file or files)
+
+To merge branches
+go to the branch
+git merge name-of-branch to merge
+the file .gitignore will contain files you would like git to ignore when pushing or merging, just place the name of the file there. you can create the .gitignore in every branch you want to use.
+
+** git push --all origin to push all changes to the repository
+
+**you can roll back a change made before getting to the staging area by doing **** git checkout file-name*******  this will roll back any changes made to that file.
+
+*** git diff (will show you differences in changes made)
+*** or do git diff --cached (when you have already added it to the stagign area)
+
+** git restore --staged name-of-file (to restore a change that has already been staged)
+**you can compare with *** git diff ** now
+**then ** git checkout file-name*******
+
+after commit, you can revert with **** git HEAD ****
+after commit, you can do *** git log --oneline *** to show the commit ID
+You can compare ID from the output of previous, with *** git diff commit-id..commit-id to compare
+
+*** git revert HEAD to revert from head changes ( or you can even specify after the head the ID to revert.)
+
+*** git reset --hard commit-id-here (you can get id from the git log --oneline)
+
+
+***** MAVIN (The build tool) *****
+Mavin is for java
+Used for;
+Build process | Build tools 
+
+****Build process contains: ****
+- Source code
+- Compile
+- Test (Unit/Integration test)
+- Package (jar, war, exe, msi etc)
+- Health checks (code analysis/ find bugs)
+
+****** build Tools****
+maven | ANT | MsBuild | Gradle | MAKE etc
+jdk1.8 and maven installation
+mvn -version
+clone the repo and change branch then cd to it
+mvn test | check the output in the target directory
+mvn install
+mvn clean to wipe out all the target directory
+** mvn clean install is best practise
+** you can search for the mavin archive on the internet if you want to use a specific version of mavin so as to download
+do wget to download the tar file and then extract it. and you can then use it by checking the files inside what you have downloaded
+cd to the-version-folder/bin then you see mvn | you can check the version by adding -version to it
+then run the mv clean install from the downloaded version to check if it works with your app
+
+
+**********************yum search package-name | apt search package-name
+
+
+
+
+******* CONTINUOUS INTEGRATION with JENKINS ****
+
+The process for developers is to code - Build - Test (locally) - push (to a repository)
+* The automation of the process above is called Continuous integration as the codes will be fetched and process, if there is error, developers will be notified
+
+Pre-requisites are JAVA | JRE | JDK
+Jenkins can be installed by checking the documentation online and follow through, install the plugins needed and move. save the url for access later also.
+
+FREESTLYE JOB vs PIPELINE AS A CODE
+** Freestyle Jobs
+- graphical jobs | learning understanding and exploring jenkins purposes only.
+- Not recommended in real time.
+
+** PIPELINE As A CODE
+- pipeline created in groovy for collaboration purposes only
+- recommended in real time
+
+for GIT Error while adding git repo, install git on the server, install git client on the jenkins plugin then do,
+/etc/ssh/ssh_config ( StrictHostKeyChecking no ) that fixes it, read the error
+git config --system http.sslVerify false    
+git config --global http.sslVerify false
+
+donwload maven on the server
+use the timeout feature on jenkins gui
+check dns
+
+Versioning can be added to jenkins by checking paths in workspace under targets
+
+mkdir -p versions
+#cp target/vprofile-v2.war versions/vprofile-v$BUILD_ID.war
+cp target/vprofile-v2.war versions/vprofile-v$BUILD_TIMESTAMP-$BUILD_ID.war
+
+you can add the directory like the exsmple above to direct where to store and also install a timestamp plugin which wi;; a;sp he;p. use the build variable
+
+
+******FLOW FOR PROJECT/CODE BUILD AND TEST *****
+Developer(git) - GitHub - All Jenkins( Fetch code (with git) - Build (Maven) - Unit Test (Maven) - Code Analysis (SonarQube) - Upload Artifact (Sonatype(Nexxes OSS)) )
+
+** Steps to achieve above(Do this in the cloud or on-prem) rOADMAP Applies all the time:
+- Jenkins SETUP
+- Nexus setup
+- Sonarqube setup
+- Security Group
+- Plugins to be installed on jenkins(nexus, sonarqube, git, pipeline maven integration plugin, buildtimestamp , pipeline utility steps) (insight appsec)
+- Integrate
+	- Nexus
+	- Sonarqube
+- Write pipeline script
+- Set notification (via plugin (slack, etc (setup slack and integrate)))
+
+****Pipeline as a Code (Introduction)
+- Automate pipeline setup with Jenkinsfile
+- Jenkinsfile defines stages in CI/CD pipeline
+- Jenkinsfile is a text file with pipeline DSL Syntax
+- Similar to grrovy
+- Two Syntax
+	- Scripted and - Declarative
+
+Jenkins - Ubuntu 18 t2-small
+sonarqube - ubuntu 18 t2 medium
+nexus - cent 0S t2 medium
+
+*****Pipeline Concepts
+- Pipeline
+- Node/ Agent
+- Stages
+- Steps
+
+**** how to scan code with conar scanner AND how to scan code with insight app sec***
+**also google (sonar scanner pipeline script)
+
+****Developer makes a change to a code, It goes to github, Jenkins detects a code changed from github and fetches it and run a unit test (maven), conduct code analysis with checkstyle and code inspection/inspection with sonarqube, upload to sonarqube server and wait for the quality gate to pass, if good, then we build a docker image from the artifacts and upload to amazon ECR.
+
+****To add amazon ECR to the pipeline for uploading docker images, we need;
+- IAM user with ECR permission
+- Store aws credential in JENKINS
+- ECR repos on AWS
+- plugin docker pipeline
+- Plugins ECR
+- Install docker engine on JENKINS
+
+Steps in executing the above
+- Install docker engine in JENKINS server cli
+	- Add jenkins user to docker group & reboot
+- Install AWS Cli
+- Create IAM User
+- Create ECR Repo
+- Plugins
+	- ECR, docker pipeline, aws sdk for credentials, cloudbees docker build and publish pipeline:aws steps(for CD)
+- Store AWS credentials in JENKINS
+- Run the pipeline
+
+****For Continuous INTEGRATION and delivery with docker CI/CD
+
+****Developer makes a change to a code, It goes to github, Jenkins detects a code changed from github and fetches it and run a unit test (maven), conduct code analysis with checkstyle and code inspection/inspection with sonarqube, upload to sonarqube server and wait for the quality gate to pass, if good, then we build a docker image from the artifacts and upload to amazon ECR. then the images are then hosted on ECS(Elastic container service), (this could be our dockerised application). Amazon ecs will fetch the container from ECR.
+
+Steps in executing the above
+- Install docker engine in JENKINS server cli
+	- Add jenkins user to docker group & reboot
+- Install AWS Cli
+- Create IAM User
+- Create ECR Repo
+- Plugins
+	- ECR, docker pipeline, aws sdk for credentials, cloudbees docker build and publish
+- Store AWS credentials in JENKINS
+- Run the pipeline
+- Create a ECS cluster 
+- Create a ECS service
+
+************ READ ABOUT ECS from AWS DASHBOARD
+ECS merged with FARGATE
+
+ ssh-keygen.exe to create keys for github
+ 
+ ** FOR GITHUB BUILD TRIGGERS
+- set the git repository needed
+- ssh authentication should also be set with public keys on github
+- create the Jenkinsfile and place it in the repo and commit
+- create the jenkins job to access Jenkinsfile from git repo and also set the private keys from the ssh-keygen scope
+- Test Triggers
+
+*** Automate triggers
+- WITH WEBHOOK (Github)
+	- copy the jenkins URL and goto github and goto the setting of the actual repo
+	- in the payload url, add the url
+	- change the content type to json
+	- select the way you wan the events to trigger and ensure it ticks green
+	- goto jenkins and configure the job, tick the trigger for "GitHub hook trigger for GITScm polling"
+- With Poll SCM
+	- goto the the jenkins job config
+	- under build triggers pick poll SCM and add the schedule in cron format
+	- test
+- With Schedulling OPTION
+	- goto the jenkins job configure
+	- under build trigger, tick Build periodically option and also add the crojob
+- Remote triggers
+- YOu can also use a job completion to trigger another job
+
+
+
+
+
+*****PYTHON****
+Python interpreter directory on linux is ****  #!/usr/bin/python  ***
+
+
+
+
+****** ANSIBLE ********
+(puppet, chef)
+* Use cases
+- Automation (any system automation)
+- Change Management (Production server changes)
+- Provisioning (Setup servers from scratch/cloud rpovisioning)
+- Orchestration (Large scale automation framework)
+Can be integrated with Jenkins too for complete orchestration
+*** You can also manage network devices and also databases with ansible
+** for windows, it uses winrm and for linux, it uses ssh and for cloud, it uses api
+
+Ansible is also a python library
+*** Inventory -> Playbooks -> Use modules -> Create configuration -> execute via python package and delivers to be executed on the target host.
+If its a cloud workload, it will executed locally before delivery
+
+to use key based authentication on remote device, generate the ssh keys with ssh-keygen, then use ssh-copy-id user@hostname to copy to the remote device automatically
+
+scriptbox 192.168.3.46
+web01 192.168.3.27
+web02 192.168.3.28
+web03 192.168.3.29
+
+/home/vagrant/.ssh/id_rsa
+
+**** Modules in Ansible ****
+- yum
+- service
+- copy etc
+
+adhoc commands are the once you can quickly run from the terminal with the ansible command for example, ** ansible -i inventory-file -m (meaning module) module-name (e.g yum, service etc, copy) -a "what to do" server-to-perform-task --become (if needed)
+
+*** To check the syntax if correct on ansible use **( ansible-playbook web-db.yml  --syntax-check -i inventory)
+
+ USe ansible to do sudo yum/apt update
+
+***** You can check the ansible doc for all modules. just search ansible modules in google
+
+*** you can do a dryrun with a playbook to test the operation if it will actually run. just add *** -C *** to the end of the playbook
+
+**Variables
+- you can setup variables in playbook via (vars) or you can also setup inventory based variables  and also role based variables and also run time variable where you can also store the output.
+
+** To print in ansible, you use the command debug in a playbook which works like,
+debug:
+  var: var_name
+
+
+group_vars is the folder where you define variables outside a playbook, this folder will be created in the playbooks directory
+
+
+
+
+	
+
+
+
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
